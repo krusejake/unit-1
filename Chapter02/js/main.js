@@ -1,100 +1,129 @@
-// Add all scripts to the JS folder
-function myFunc(){
-    var mydiv = document.getElementById('mydiv');
-    mydiv.innerHTML = 'Hello World';
+var cityPop = [ //create data for table
+	{ 
+		city: 'Madison',
+		population: 233209
+	},
+	{
+		city: 'Milwaukee',
+		population: 594833
+	},
+	{
+		city: 'Green Bay',
+		population: 104057
+	},
+	{
+		city: 'Superior',
+		population: 27244
+	}
+];
+
+function createTable(){
+//create a table element
+	var table = document.createElement("table");
+	//create a header row
+	var headerRow = document.createElement("tr");
+	//add the "City" and "Population" columns to the header row
+    headerRow.insertAdjacentHTML("beforeend","<th>City</th><th>Population</th>")
+	//add the header row
+	table.appendChild(headerRow);
+
+	//loop to add a new row for each city
+    for (var i = 0; i < cityPop.length; i++){
+        //assign longer html strings to a variable
+        var rowHtml = "<tr><td>" + cityPop[i].city + "</td><td>" + cityPop[i].population + "</td></tr>";
+        //add the row's html string to the table
+        table.insertAdjacentHTML('beforeend',rowHtml);
+    }
+	
+	document.querySelector("#mydiv").appendChild(table); //add table to mydiv section
+
+	addColumns(cityPop); //run func to add in third column
+}
+
+function addColumns(cityPop){
+    document.querySelectorAll("tr").forEach(function(row, i){ //find the header row
+    	if (i == 0){
+    		row.insertAdjacentHTML('beforeend', '<th>City Size</th>'); //add City Size to header
+    	} else { //set row val for new col  depending on the following thresholds
+    		var citySize;
+    		if (cityPop[i-1].population < 100000){
+    			citySize = 'Small';
+    		} else if (cityPop[i-1].population < 500000){
+    			citySize = 'Medium';
+    		} else {
+    			citySize = 'Large';
+    		};
+			toInsert = '<td>' + citySize + '</td>'
+			row.insertAdjacentHTML('beforeend',toInsert); //insert val in row/col
+    	};
+    });
 };
 
-//initialize function called when script loads
-function initialize(){
-    cities();
+function addEvents(){
+
+	document.querySelector("table").addEventListener("mouseover", function(){
+		//build up a random string with rgb values
+		var color = "rgb(";	
+		for (var i=0; i<3; i++){
+			var random = Math.round(Math.random() * 255);
+			color += random;
+			if (i<2){
+				color += ",";
+			} else {
+				color += ")"	
+			};
+		};
+		document.querySelector("table").style.color = color; //set table color to str composed above
+		console.log(document.querySelector("table").style.color)
+	});
+
+	function clickme(){ //alerts upon click
+
+		alert('Hey, you clicked me!');
+	};
+
+	document.querySelector("table").addEventListener("click", clickme) //implements above func
 };
 
-//function to create a table with cities and their populations
-function cities(){
-    var cities = [
-        'Madison',
-        'Milwaukee',
-        'Green Bay',
-        'Superior'
-    ];
-    var population = [
-        233209,
-        594833,
-        104057,
-        27244
-    ];
-
-    //create a table element
-    var table = document.createElement("table");
-
-    //create a header row
-    var headerRow = document.createElement("tr");
-
-    //add city column to header row
-    var cityHeader = document.createElement("th");
-    cityHeader.innerHTML = "City";
-    headerRow.appendChild(cityHeader);
-
-    //add population column to header row
-    var popHeader = document.createElement("th");
-    popHeader.innerHTML = "Population";
-    headerRow.appendChild(popHeader);
-
-    //add the header row
-    table.appendChild(headerRow);
-
-    //loop to add a new row for each city
-    for (var i = 0; i < cities.length; i++){
-        var tr = document.createElement("tr");
-
-        var city = document.createElement("td");
-        city.innerHTML = cities[i];
-        tr.appendChild(city);
-
-        var pop = document.createElement("td");
-        pop.innerHTML = population[i];
-        tr.appendChild(pop);
-
-        table.appendChild(tr);
-    };
-
-    //add the table to the div in index.html
-    var mydiv = document.getElementById("mydiv");
-    mydiv.appendChild(table);
+function initialize(){ //functions run on page
+	createTable();
+	addEvents();
+	printTableToConsole();
+	debugAjax();
 };
-
-
-
-    //Example 2.4 line 25...loop to add a new row for each city
-    for (var i = 0; i < city.length; i++){
-        var tr = document.createElement("tr");
-    
-        var city = document.createElement("td");
-        //first conditional block
-            if (cityPop[i].city == 'Madison'){
-                city.innerHTML = 'Badgerville';
-            } else if (cityPop[i].city == 'Green Bay'){
-                city.innerHTML = 'Packerville';
-            } else {
-                city.innerHTML = cityPop[i].city;
-            }
-    
-            tr.appendChild(city);
-    
-            var pop = document.createElement("td");
-        //second conditional block        
-            if (cityPop[i].population < 500000){
-                pop.innerHTML = cityPop[i].population;
-            } else {
-                pop.innerHTML = 'Too big!';
-            };
-    
-            tr.appendChild(pop);
-    
-            table.appendChild(tr);
-        };
-        
 
 window.onload = initialize();
-console.log('Got here')
-// window.onload = myFunc();
+
+
+
+// /_______________________________________
+function printTableToConsole(){
+
+	fetch("data/MegaCities.geojson")
+		.then(function(response){
+			return response.json();
+		})
+		.then(function(response){
+			console.log('wrote a separate function to log the table to console:')
+			console.log(JSON.stringify(response))
+		})
+};
+
+function debugCallback(response){ //uses the fetched data to insert a table
+	console.log('Can access fetched data within callback func: typeof(response) = ',typeof(response))
+	document.querySelector("#mydiv").insertAdjacentHTML('beforeend', 'GeoJSON data: ' + JSON.stringify(response))
+	console.log('Made it to END of callback function')
+};
+
+function debugAjax(){ // fetches data and sends to callback func
+
+	fetch("data/MegaCities.geojson")
+		.then(function(response){
+			return response.json();
+		})
+		.then(debugCallback)
+		.then(function(response){
+			console.log('CANNOT access fetched data within debugAjax() function but after response.json() called: typeof(response) = ',typeof(response))
+		})
+	console.log('CANNOT access fetched data within function but outside of fetch(): typeof(response) = ',typeof(response))
+};
