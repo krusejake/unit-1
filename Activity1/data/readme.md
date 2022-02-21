@@ -1,0 +1,1 @@
+place csv's, shapefiles, etc, in this folder
